@@ -3,7 +3,7 @@ topic: "Computer Science"
 # An empty list here will include all categories in a topic
 # Use the natural language names of the topics, found here: https://arxiv.org
 # Including more categories will result in more calls to the large language model
-categories: ["Artificial Intelligence", "Computation and Language", "Machine Learning", "Information Retrieval"]
+categories: ["Artificial Intelligence", "Computer Vision and Pattern Recognition", "Machine Learning", "Information Retrieval", "]
 
 # Relevance score threshold. abstracts that receive a score less than this from the large language model
 # will have their papers filtered out.
@@ -21,10 +21,7 @@ threshold: 2
 # This can be empty, which just return a full list of papers with no judgement or filtering,
 # in whatever order arXiv responds with.
 interest: |
-  1. AI alignment and AI safety
-  2. Mechanistic interpretability and explainable AI
-  3. Large language model under pressure
-  4. AI Red teaming, deception and misalignment
-  5. RAGs, Information retrieval
-  6. Optimization of LLM and GenAI
-  7. Do not care about specific application, for example, information extraction, summarization, etc.
+  1. Kolmogorov - Arnold Netwworks
+  2. Medical Imaging
+  3. Deep learning
+  
