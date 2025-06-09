@@ -343,12 +343,12 @@ if __name__ == "__main__":
     if not any([gemini_key, openai_key, anthropic_key]):
         raise RuntimeError("No AI API key found. Please set GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY")
     
-    # Set OpenAI key if available (for backwards compatibility)
-    if openai_key:
+    # Prioritize Gemini API for best performance and cost
+    if gemini_key:
+        print("✅ Using Gemini API (recommended)")
+    elif openai_key:
         openai.api_key = openai_key
         print("✅ Using OpenAI API")
-    elif gemini_key:
-        print("✅ Using Gemini API (recommended)")
     elif anthropic_key:
         print("✅ Using Anthropic API")
 
