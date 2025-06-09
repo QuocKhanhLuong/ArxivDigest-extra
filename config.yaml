@@ -3,13 +3,13 @@ topic: "Computer Science"
 # An empty list here will include all categories in a topic
 # Use the natural language names of the topics, found here: https://arxiv.org
 # Including more categories will result in more calls to the large language model
-categories: ["Artificial Intelligence", "Computer Vision and Pattern Recognition", "Machine Learning", "Information Retrieval", "Multiagent Systems"]
+categories: ["Artificial Intelligence", "Computer Vision and Pattern Recognition"]
 
 # Relevance score threshold. abstracts that receive a score less than this from the large language model
 # will have their papers filtered out.
 #
 # Must be within 1-10
-threshold: 2
+threshold: 6
 
 # A natural language statement that the large language model will use to judge which papers are relevant 
 #
