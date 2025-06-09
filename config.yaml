@@ -21,7 +21,9 @@ threshold: 2
 # This can be empty, which just return a full list of papers with no judgement or filtering,
 # in whatever order arXiv responds with.
 interest: |
-  1. Kolmogorov - Arnold Netwworks
-  2. Medical Imaging
-  3. Deep learning
+  1. Kolmogorov-Arnold Networks (KANs) and novel neural network architectures
+  2. Medical imaging applications with deep learning and AI-assisted diagnosis
+  3. Deep learning optimization, efficiency improvements, and model interpretability
+  4. Computer vision for healthcare and medical image analysis
+  5. Neural architecture search and automated machine learning
   

@@ -1,0 +1,103 @@
+# Optimized workflow for ArXiv Digest with Gemini AI and Gmail SMTP
+name: Daily ArXiv Digest with Gemini AI
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # Runs at 1:25 PM UTC, Monday-Friday
+    # Adjust this cron schedule as needed
+    - cron: '25 13 * * 1-5'
+
+jobs:
+  generate_and_send_digest:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Cache Dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Generate ArXiv Digest with Gemini AI
+      run: |
+        python src/action.py
+      env:
+        # Primary AI Provider - Gemini (Cost-effective and powerful)
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        
+        # Optional: Additional AI providers for comparison
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        
+        # Email Configuration
+        FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+        TO_EMAIL: ${{ secrets.TO_EMAIL }}
+        
+    - name: Upload Digest as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: arxiv-digest-gemini-${{ github.run_number }}
+        path: digest.html
+        retention-days: 30
+        
+    - name: Verify Gmail Configuration
+      id: gmail_check
+      env:
+        MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+        MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+        FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+        TO_EMAIL: ${{ secrets.TO_EMAIL }}
+      run: |
+        if [[ -n "$MAIL_USERNAME" && -n "$MAIL_PASSWORD" && -n "$FROM_EMAIL" && -n "$TO_EMAIL" ]]; then
+          echo "GMAIL_READY=true" >> $GITHUB_OUTPUT
+          echo "✅ Gmail SMTP configuration verified"
+        else
+          echo "GMAIL_READY=false" >> $GITHUB_OUTPUT
+          echo "⚠️ Gmail SMTP not configured - digest will only be available as artifact"
+        fi
+        
+    - name: Send Digest via Gmail SMTP
+      if: steps.gmail_check.outputs.GMAIL_READY == 'true'
+      uses: dawidd6/action-send-mail@v3
+      with:
+        # Gmail SMTP Settings
+        server_address: smtp.gmail.com
+        server_port: 587
+        secure: true
+        username: ${{ secrets.MAIL_USERNAME }}
+        password: ${{ secrets.MAIL_PASSWORD }}
+        
+        # Email Content
+        subject: "🤖 Daily ArXiv Digest with Gemini AI - ${{ github.run_number }}"
+        to: ${{ secrets.TO_EMAIL }}
+        from: ${{ secrets.FROM_EMAIL }}
+        html_body: file://digest.html
+        
+        # Additional Settings
+        ignore_cert: false
+        convert_markdown: true
+        priority: normal
+        
+    - name: Summary
+      run: |
+        echo "## 📊 Digest Generation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Run Number:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Primary AI:** Gemini API" >> $GITHUB_STEP_SUMMARY
+        echo "- **Email Status:** ${{ steps.gmail_check.outputs.GMAIL_READY == 'true' && '✅ Sent via Gmail' || '📁 Available as artifact only' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Artifact:** arxiv-digest-gemini-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY 
