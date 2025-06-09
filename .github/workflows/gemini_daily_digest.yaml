@@ -13,15 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Set up Python 3.11
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         
     - name: Cache Dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -35,6 +35,7 @@ jobs:
         
     - name: Generate ArXiv Digest with Gemini AI
       run: |
+        echo "🚀 Starting ArXiv digest generation with Gemini AI..."
         python src/action.py
       env:
         # Primary AI Provider - Gemini (Cost-effective and powerful)
@@ -47,9 +48,10 @@ jobs:
         # Email Configuration
         FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
         TO_EMAIL: ${{ secrets.TO_EMAIL }}
+      timeout-minutes: 30
         
     - name: Upload Digest as Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: arxiv-digest-gemini-${{ github.run_number }}
         path: digest.html
@@ -73,7 +75,7 @@ jobs:
         
     - name: Send Digest via Gmail SMTP
       if: steps.gmail_check.outputs.GMAIL_READY == 'true'
-      uses: dawidd6/action-send-mail@v3
+      uses: dawidd6/action-send-mail@v3.12.0
       with:
         # Gmail SMTP Settings
         server_address: smtp.gmail.com
