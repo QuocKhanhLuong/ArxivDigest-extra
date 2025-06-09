@@ -248,12 +248,52 @@ def generate_body(topic, categories, interest, threshold):
     else:
         papers = get_papers(abbr)
     if interest:
-        relevancy, hallucination = generate_relevance_score(
-            papers,
-            query={"interest": interest},
-            threshold_score=threshold,
-            num_paper_in_prompt=2,
-        )
+        # Use Gemini as primary model if available, fallback to OpenAI
+        gemini_key = os.environ.get("GEMINI_API_KEY")
+        openai_key = os.environ.get("OPENAI_API_KEY")
+        
+        if gemini_key:
+            # Use Gemini directly for analysis
+            print("🤖 Using Gemini API for paper analysis")
+            from gemini_utils import analyze_papers_with_gemini
+            all_analyzed = analyze_papers_with_gemini(
+                papers,
+                query={"interest": interest},
+                model_name="gemini-1.5-flash"
+            )
+            
+            # Filter by threshold
+            relevancy = []
+            for paper in all_analyzed:
+                score = paper.get("Relevancy score", 0)
+                if isinstance(score, str):
+                    try:
+                        if '/' in score:
+                            score = int(score.split('/')[0])
+                        else:
+                            score = int(score)
+                    except (ValueError, TypeError):
+                        score = 0
+                
+                if score >= threshold:
+                    relevancy.append(paper)
+                    print(f"✅ Paper '{paper.get('title', 'Unknown')[:50]}...' - Score: {score}")
+                else:
+                    print(f"❌ Paper '{paper.get('title', 'Unknown')[:50]}...' - Score: {score} (below threshold {threshold})")
+            
+            print(f"🎯 Final result: {len(relevancy)} papers passed threshold {threshold} out of {len(all_analyzed)} analyzed")
+            hallucination = False
+        elif openai_key:
+            # Fallback to OpenAI
+            print("🤖 Using OpenAI API for paper analysis")
+            relevancy, hallucination = generate_relevance_score(
+                papers,
+                query={"interest": interest},
+                threshold_score=threshold,
+                num_paper_in_prompt=2,
+            )
+        else:
+            raise RuntimeError("No supported AI API key found for paper analysis")
 
         body = "<br><br>".join(
             [
@@ -295,9 +335,22 @@ if __name__ == "__main__":
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)
 
-    if "OPENAI_API_KEY" not in os.environ:
-        raise RuntimeError("No openai api key found")
-    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    # Check for available AI API keys - prioritize Gemini
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+    
+    if not any([gemini_key, openai_key, anthropic_key]):
+        raise RuntimeError("No AI API key found. Please set GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY")
+    
+    # Set OpenAI key if available (for backwards compatibility)
+    if openai_key:
+        openai.api_key = openai_key
+        print("✅ Using OpenAI API")
+    elif gemini_key:
+        print("✅ Using Gemini API (recommended)")
+    elif anthropic_key:
+        print("✅ Using Anthropic API")
 
     topic = config["topic"]
     categories = config["categories"]
