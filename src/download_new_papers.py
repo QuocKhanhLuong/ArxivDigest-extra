@@ -26,7 +26,7 @@ def crawl_html_version(html_link):
     except HTTPError as e:
         return f"Error accessing HTML: {str(e)}"
     
-    soup = bs(html)
+    soup = bs(html, features="html.parser")
     content = soup.find('div', attrs={'class': 'ltx_page_content'})
     if not content:
         return "Content not available in HTML format"
@@ -45,7 +45,7 @@ def crawl_abstract(html_link):
         html = urllib.request.urlopen(html_link)
     except HTTPError as e:
         return ["None"]
-    soup = bs(html)
+    soup = bs(html, features="html.parser")
     content = soup.find('blockquote', attrs={'class': 'abstract'}).text.replace("Abstract:", "").strip()
     return content
 def _download_new_papers(field_abbr):
@@ -58,7 +58,7 @@ def _download_new_papers(field_abbr):
     req = urllib.request.Request(NEW_SUB_URL, headers=headers)
     page = urllib.request.urlopen(req)
 
-    soup = bs(page)
+    soup = bs(page, features="html.parser")
     content = soup.body.find("div", {'id': 'content'})
 
     # find the first h3 element in content
